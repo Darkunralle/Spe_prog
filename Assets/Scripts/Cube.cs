@@ -7,54 +7,54 @@ public class Cube : MonoBehaviour
     private int m_cubePosX;
     private int m_cubePosY;
 
-    private float m_leftOrRight;
-
     private float m_elapsedTime = 0;
 
     [SerializeField]
-    private float m_ticRate = 0.1f;
+    private float m_ticRate = 0.25f;
+
+    private float m_leftOrRight;
 
     private bool m_isLocked = false;
     private bool m_cantMove = false;
 
-    private void Update()
+    public delegate void DeleScore(int p_score);
+    public static DeleScore onScore;
+
+    private void OnEnable()
     {
-        m_leftOrRight = Input.GetAxisRaw("Horizontal");
-        m_elapsedTime += Time.deltaTime;
-        if (m_elapsedTime >= m_ticRate)
-        {
-            MoveLat();
-            m_elapsedTime = 0;
-        }
-        // A placer dans le Game Manager
+        GameManager.Instance.onMove += HandleMove;
+        GameManager.Instance.onStraf += HandleStraf;
     }
 
-    public void MoveLat()
+    private void OnDisable()
     {
+        GameManager.Instance.onMove -= HandleMove;
+        GameManager.Instance.onStraf -= HandleStraf;
+    }
+
+    private void HandleStraf()
+    {
+        m_leftOrRight = Input.GetAxisRaw("Horizontal");
+
         if (m_cantMove)
         {
             return;
 
         }
 
-        if (GameManager.Instance.GetStatus(m_cubePosX + (int)m_leftOrRight , m_cubePosY) == GameManager.Status.VIDE)
+        if (GameManager.Instance.GetStatus(m_cubePosX + (int)m_leftOrRight, m_cubePosY) == GameManager.Status.VIDE)
         {
-            GameManager.Instance.MoveCube(m_cubePosX, m_cubePosY, m_cubePosX + (int)m_leftOrRight , m_cubePosY);
+            GameManager.Instance.MoveCube(m_cubePosX, m_cubePosY, m_cubePosX + (int)m_leftOrRight, m_cubePosY);
             m_cubePosX += (int)m_leftOrRight;
             transform.position = new Vector3(m_cubePosX, m_cubePosY, 0);
 
         }
-        
-
-        // Déplace le cube de gauche ou a droite selon axeX
-
-
     }
-    public void MoveDown()
+    public void HandleMove()
     {
         if (m_isLocked)
         {
-            //Debug.Log(message: "Le cube est bloqué", this);
+            Debug.Log(message: "Le cube est bloqué", this);
             //verifier si ligne du bas libérée ?
             
             return;
@@ -68,6 +68,7 @@ public class Cube : MonoBehaviour
             Debug.Log(message: "on bloque le cube", this);
             m_isLocked = true;
             m_cantMove = true;
+            onScore?.Invoke(10);
             GameManager.Instance.CreateCube();
             return;
         }

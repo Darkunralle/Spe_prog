@@ -8,7 +8,7 @@ public class GameManager : Singleton<GameManager>
     private float m_elapsedTime = 0;
 
     [SerializeField]
-    private float m_ticRate = 0.25f;
+    private float m_ticRate = 0.1f;
 
     [SerializeField]
     private GameObject m_cubePrefab;
@@ -29,10 +29,15 @@ public class GameManager : Singleton<GameManager>
     [SerializeField]
     private Status[,] m_board;
 
+    public delegate void MoveDelegate();
+    public MoveDelegate onMove;
+    public MoveDelegate onStraf;
+
     private void Start()
     {
         ClearBoard();
         CreateCube();
+        ClearLigne();
     }
 
     private void Update()
@@ -41,7 +46,9 @@ public class GameManager : Singleton<GameManager>
         m_elapsedTime += Time.deltaTime;
         if (m_elapsedTime >= m_ticRate)
         {
-            MoveDown();
+            //MoveDown();
+            onMove?.Invoke();
+            onStraf?.Invoke();
             m_elapsedTime = 0;
         }
 
@@ -53,7 +60,14 @@ public class GameManager : Singleton<GameManager>
         m_cubes.Clear();
     }
 
-
+    private void ClearLigne()
+    {
+        for (int i = 0; i < m_boardWitdh; i++)
+        {
+            Debug.Log(message: $"'{m_board[i, 24]}");
+        }
+        
+    }
 
     protected override string GetSingletonName()
     {
@@ -68,7 +82,7 @@ public class GameManager : Singleton<GameManager>
         for (int i = 0; i < m_cubes.Count; i++)
         {
             //le move down du script Cube (celle en pbc)
-            m_cubes[i].MoveDown();
+            m_cubes[i].HandleMove();
         }
     }
     public void MoveCube(int p_xOrigin, int p_yOrigin, int p_xDest, int p_yDest)
@@ -118,7 +132,7 @@ public class GameManager : Singleton<GameManager>
             return Status.ERROR;
         }
         
-        //Debug.Log(message: $"' position x {p_x}, position y {p_y} = {m_board[p_x, p_y]}");
+        Debug.Log(message: $"' position x {p_x}, position y {p_y} = {m_board[p_x, p_y]}");
         return m_board[p_x, p_y];
         
     }
